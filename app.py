@@ -267,6 +267,74 @@ with tabs[1]:
 
         st.subheader("Your environment’s design profile")
 
+        scaff = custom_scores["Scaffolding"]
+        icap = custom_scores["ICAP engagement"]
+        feed = custom_scores["Feedback quality"]
+        collab = custom_scores["Collaboration"]
+        meta = custom_scores["Metacognitive support"]
+
+        # Summary line – ABOVE the chart
+        summary_line = (
+            f"**Summary:** {env_display_name} appears mostly **{icap_label(icap)}** "
+            f"with **{level_label(scaff)} scaffolding** and "
+            f"**{level_label(meta)} metacognitive support**."
+        )
+        st.markdown(summary_line)
+
+        # -------- Impact on learning -------- #
+        impact_parts = []
+
+        # ICAP impact
+        if icap <= 1:
+            impact_parts.append(
+                "students mainly receive information passively, so knowledge may remain inert and hard to transfer."
+            )
+        elif icap == 2:
+            impact_parts.append(
+                "students are active but not generative, so they may complete tasks without fully understanding underlying concepts."
+            )
+        elif icap == 4:
+            impact_parts.append(
+                "students engage constructively, which usually supports deeper understanding and integration of ideas."
+            )
+        else:
+            impact_parts.append(
+                "students engage interactively, which often supports co-construction of ideas and deeper learning."
+            )
+
+        # Scaffolding impact
+        if scaff <= 2:
+            impact_parts.append(
+                "Because scaffolding is low, struggling learners may not get enough adaptive support and can stay confused or fall behind."
+            )
+        elif scaff == 3:
+            impact_parts.append(
+                "With moderate scaffolding, some learners receive help, but support might not always be contingent or faded over time."
+            )
+        else:
+            impact_parts.append(
+                "High scaffolding can help keep learners in their zone of proximal development, as long as support is gradually faded to build independence."
+            )
+
+        # Metacognition impact
+        if meta <= 2:
+            impact_parts.append(
+                "Low metacognitive support means students have fewer opportunities to plan, monitor, and reflect, which can limit long-term self-regulation."
+            )
+        elif meta == 3:
+            impact_parts.append(
+                "Some metacognitive support is present, but making reflection more regular and strategy-focused could strengthen durable learning."
+            )
+        else:
+            impact_parts.append(
+                "Strong metacognitive support can help learners take more ownership of their learning and transfer strategies to new contexts."
+            )
+
+        impact_text = " ".join(impact_parts)
+
+        st.markdown(f"**Impact on learning:** {impact_text}")
+
+        # Chart
         fig2 = px.bar(
             df_custom,
             x="Design principle",
@@ -280,18 +348,6 @@ with tabs[1]:
         st.plotly_chart(fig2, use_container_width=True)
 
         st.subheader("Interpretation")
-
-        scaff = custom_scores["Scaffolding"]
-        icap = custom_scores["ICAP engagement"]
-        feed = custom_scores["Feedback quality"]
-        collab = custom_scores["Collaboration"]
-        meta = custom_scores["Metacognitive support"]
-
-        # Summary line
-        st.markdown(
-            f"**Summary:** {env_display_name} appears mostly **{icap_label(icap)}** "
-            f"with **{level_label(scaff)} scaffolding** and **{level_label(meta)} metacognitive support**."
-        )
 
         # ICAP explanation text
         if icap <= 1:
@@ -315,38 +371,96 @@ with tabs[1]:
                 "Learners co-construct ideas through dialogue and collaboration."
             )
 
-        st.markdown(
-            f"""
-            **Design principle details**
+        interpretation_text = f"""
+        **Design principle details**
 
-            **Scaffolding:**  
-            - Score: {scaff}/5 ({level_label(scaff).capitalize()})  
-            {"• Low scaffolding. Consider adding more adaptive teacher or peer support." if scaff <= 2 else ""}
-            {"• Moderate scaffolding. You might make support more clearly contingent and plan for fading over time." if scaff == 3 else ""}
-            {"• Strong scaffolding. Support seems adaptive; consider planning how it fades to build independence." if scaff >= 4 else ""}
+        **Scaffolding:**  
+        - Score: {scaff}/5 ({level_label(scaff).capitalize()})  
+        {"• Low scaffolding. Consider adding more adaptive teacher or peer support." if scaff <= 2 else ""}
+        {"• Moderate scaffolding. You might make support more clearly contingent and plan for fading over time." if scaff == 3 else ""}
+        {"• Strong scaffolding. Support seems adaptive; consider planning how it fades to build independence." if scaff >= 4 else ""}
 
-            **ICAP Engagement:**  
-            - Score: {icap}/5 ({icap_label(icap)})  
-            {icap_text}
+        **ICAP Engagement:**  
+        - Score: {icap}/5 ({icap_label(icap)})  
+        {icap_text}
 
-            **Feedback quality:**  
-            - Score: {feed}/5 ({level_label(feed).capitalize()})  
-            {"• Feedback is mostly evaluative. Adding explanations linked to misconceptions could deepen learning." if feed <= 2 else ""}
-            {"• Feedback is somewhat explanatory. You could align it more closely with specific errors or strategies." if feed == 3 else ""}
-            {"• Feedback appears highly diagnostic and explanatory, which is ideal for learning." if feed >= 4 else ""}
+        **Feedback quality:**  
+        - Score: {feed}/5 ({level_label(feed).capitalize()})  
+        {"• Feedback is mostly evaluative. Adding explanations linked to misconceptions could deepen learning." if feed <= 2 else ""}
+        {"• Feedback is somewhat explanatory. You could align it more closely with specific errors or strategies." if feed == 3 else ""}
+        {"• Feedback appears highly diagnostic and explanatory, which is ideal for learning." if feed >= 4 else ""}
 
-            **Collaboration:**  
-            - Score: {collab}/5 ({level_label(collab).capitalize()})  
-            {"• Mostly individual. Consider adding structured pair or group activities." if collab <= 2 else ""}
-            {"• Some collaboration. You might add roles, shared artifacts, or norms to deepen it." if collab == 3 else ""}
-            {"• Collaboration seems well integrated. Check that it supports real co-construction, not just dividing work." if collab >= 4 else ""}
+        **Collaboration:**  
+        - Score: {collab}/5 ({level_label(collab).capitalize()})  
+        {"• Mostly individual. Consider adding structured pair or group activities." if collab <= 2 else ""}
+        {"• Some collaboration. You might add roles, shared artifacts, or norms to deepen it." if collab == 3 else ""}
+        {"• Collaboration seems well integrated. Check that it supports real co-construction, not just dividing work." if collab >= 4 else ""}
 
-            **Metacognitive support:**  
-            - Score: {meta}/5 ({level_label(meta).capitalize()})  
-            {"• Little or no metacognition. You could add prompts to plan, monitor, or reflect on learning." if meta <= 2 else ""}
-            {"• Some reflection. Making it more regular and tied to strategies could help." if meta == 3 else ""}
-            {"• Strong metacognitive support. Learners are regularly guided to reflect and self-regulate." if meta >= 4 else ""}
-            """
+        **Metacognitive support:**  
+        - Score: {meta}/5 ({level_label(meta).capitalize()})  
+        {"• Little or no metacognition. You could add prompts to plan, monitor, or reflect on learning." if meta <= 2 else ""}
+        {"• Some reflection. Making it more regular and tied to strategies could help." if meta == 3 else ""}
+        {"• Strong metacognitive support. Learners are regularly guided to reflect and self-regulate." if meta >= 4 else ""}
+        """
+
+        st.markdown(interpretation_text)
+
+        # ---- DESIGN IMPROVEMENT SUMMARY ---- #
+        st.subheader("Design improvement summary")
+
+        improvements = []
+
+        if scaff <= 2:
+            improvements.append(
+                "Increase **adaptive scaffolding** (teacher, peers, or tools) that responds to learner difficulty."
+            )
+        if icap <= 2:
+            improvements.append(
+                "Redesign tasks so learners must **explain, justify, or create**, moving beyond simple completion."
+            )
+        if collab <= 2:
+            improvements.append(
+                "Add **structured collaboration** (pairs/groups with roles and shared artifacts)."
+            )
+        if meta <= 2:
+            improvements.append(
+                "Embed regular **metacognitive prompts** (plan, monitor, reflect on strategies and understanding)."
+            )
+        if feed <= 2:
+            improvements.append(
+                "Shift feedback from right/wrong toward **diagnostic explanations** linked to misconceptions."
+            )
+
+        if not improvements:
+            improvements.append(
+                "This environment already reflects many strong design principles. Future work could focus on fine-tuning "
+                "task design and alignment across scaffolding, collaboration, and metacognition."
+            )
+
+        improvement_paragraph = " ".join(improvements)
+        st.write(improvement_paragraph)
+
+        # ---- DOWNLOAD BUTTON ---- #
+        download_text = (
+            f"Learning Environment Analysis – {env_display_name}\n\n"
+            f"Scaffolding: {scaff}/5 ({level_label(scaff)})\n"
+            f"ICAP engagement: {icap}/5 ({icap_label(icap)})\n"
+            f"Feedback quality: {feed}/5 ({level_label(feed)})\n"
+            f"Collaboration: {collab}/5 ({level_label(collab)})\n"
+            f"Metacognitive support: {meta}/5 ({level_label(meta)})\n\n"
+            f"Summary:\n{summary_line}\n\n"
+            f"Impact on learning:\n{impact_text}\n\n"
+            "Interpretation:\n"
+            f"{interpretation_text}\n\n"
+            "Design improvement summary:\n"
+            f"{improvement_paragraph}\n"
+        )
+
+        st.download_button(
+            label="Download this analysis",
+            data=download_text,
+            file_name="learning_environment_analysis.txt",
+            mime="text/plain",
         )
 
 st.markdown("---")
