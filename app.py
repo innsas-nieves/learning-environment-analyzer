@@ -4,10 +4,14 @@ import plotly.express as px
 
 st.set_page_config(page_title="Learning Environment Analyzer", layout="centered")
 
+# ---- HEADER / BRANDING ---- #
 st.title("Learning Environment Analyzer")
+st.caption("EPY 690/490 – Introduction to the Learning Sciences, UNLV")
+
 st.write(
     "Use this tool to analyze learning environments using core Learning Sciences "
-    "design principles (scaffolding, ICAP engagement, feedback, collaboration, and metacognition)."
+    "design principles: **scaffolding, ICAP engagement, feedback quality, collaboration, "
+    "and metacognitive support**."
 )
 
 tabs = st.tabs(
@@ -17,15 +21,15 @@ tabs = st.tabs(
     ]
 )
 
-# ---------- TAB 1: PRESET ENVIRONMENTS (TANG ET AL.) ---------- #
+# ---------- TAB 1: PRESET ENVIRONMENTS (TANG ET AL., 2025) ---------- #
 with tabs[0]:
     st.subheader("Preset environments from Tang et al. (2025)")
 
     st.markdown(
-        "These three environments come directly from the study:"
+        "These three environments come directly from Tang et al. (2025):"
         "\n\n- **Class 1:** Traditional computer-assisted teaching"
-        "\n- **Class 2:** Generative AI-assisted teaching, no teacher supervision"
-        "\n- **Class 3:** Generative AI-assisted teaching with teacher supervision"
+        "\n- **Class 2:** Generative AI-assisted teaching, *no* teacher supervision"
+        "\n- **Class 3:** Generative AI-assisted teaching *with* teacher supervision"
     )
 
     environments = {
@@ -134,6 +138,11 @@ with tabs[1]:
     )
 
     with st.form("env_form"):
+        env_name = st.text_input(
+            "Name or short description of your environment (optional):",
+            placeholder="e.g., 8th Grade Science Lab, AI-assisted math station, etc.",
+        )
+
         q1 = st.radio(
             "1. How often does a teacher, tutor, or system **adjust support** based on what learners seem to need?",
             [
@@ -229,6 +238,26 @@ with tabs[1]:
             "Metacognitive support": map_meta(q5),
         }
 
+        # Helper for ICAP label
+        def icap_label(score):
+            if score <= 1:
+                return "Passive (P)"
+            if score == 2:
+                return "Active (A)"
+            if score == 4:
+                return "Constructive (C)"
+            return "Interactive (I)"
+
+        # Helpers for qualitative labels
+        def level_label(score):
+            if score <= 2:
+                return "low"
+            if score == 3:
+                return "moderate"
+            return "high"
+
+        env_display_name = env_name.strip() if env_name.strip() else "This environment"
+
         df_custom = pd.DataFrame(
             {
                 "Design principle": list(custom_scores.keys()),
@@ -252,14 +281,19 @@ with tabs[1]:
 
         st.subheader("Interpretation")
 
-        # Simple interpretation based on thresholds
         scaff = custom_scores["Scaffolding"]
         icap = custom_scores["ICAP engagement"]
         feed = custom_scores["Feedback quality"]
         collab = custom_scores["Collaboration"]
         meta = custom_scores["Metacognitive support"]
 
-        # ICAP explanation
+        # Summary line
+        st.markdown(
+            f"**Summary:** {env_display_name} appears mostly **{icap_label(icap)}** "
+            f"with **{level_label(scaff)} scaffolding** and **{level_label(meta)} metacognitive support**."
+        )
+
+        # ICAP explanation text
         if icap <= 1:
             icap_text = (
                 "- Engagement is mostly **Passive** (ICAP: P). "
@@ -283,30 +317,32 @@ with tabs[1]:
 
         st.markdown(
             f"""
+            **Design principle details**
+
             **Scaffolding:**  
-            - Score: {scaff}/5  
+            - Score: {scaff}/5 ({level_label(scaff).capitalize()})  
             {"• Low scaffolding. Consider adding more adaptive teacher or peer support." if scaff <= 2 else ""}
             {"• Moderate scaffolding. You might make support more clearly contingent and plan for fading over time." if scaff == 3 else ""}
             {"• Strong scaffolding. Support seems adaptive; consider planning how it fades to build independence." if scaff >= 4 else ""}
 
             **ICAP Engagement:**  
-            - Score: {icap}/5  
+            - Score: {icap}/5 ({icap_label(icap)})  
             {icap_text}
 
             **Feedback quality:**  
-            - Score: {feed}/5  
+            - Score: {feed}/5 ({level_label(feed).capitalize()})  
             {"• Feedback is mostly evaluative. Adding explanations linked to misconceptions could deepen learning." if feed <= 2 else ""}
             {"• Feedback is somewhat explanatory. You could align it more closely with specific errors or strategies." if feed == 3 else ""}
             {"• Feedback appears highly diagnostic and explanatory, which is ideal for learning." if feed >= 4 else ""}
 
             **Collaboration:**  
-            - Score: {collab}/5  
+            - Score: {collab}/5 ({level_label(collab).capitalize()})  
             {"• Mostly individual. Consider adding structured pair or group activities." if collab <= 2 else ""}
             {"• Some collaboration. You might add roles, shared artifacts, or norms to deepen it." if collab == 3 else ""}
             {"• Collaboration seems well integrated. Check that it supports real co-construction, not just dividing work." if collab >= 4 else ""}
 
             **Metacognitive support:**  
-            - Score: {meta}/5  
+            - Score: {meta}/5 ({level_label(meta).capitalize()})  
             {"• Little or no metacognition. You could add prompts to plan, monitor, or reflect on learning." if meta <= 2 else ""}
             {"• Some reflection. Making it more regular and tied to strategies could help." if meta == 3 else ""}
             {"• Strong metacognitive support. Learners are regularly guided to reflect and self-regulate." if meta >= 4 else ""}
