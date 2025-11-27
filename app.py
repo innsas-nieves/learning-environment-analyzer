@@ -332,7 +332,7 @@ with tabs[1]:
 
         impact_text = " ".join(impact_parts)
 
-        st.markdown(f"**Impact on learning:** {impact_text}")
+        st.markdown(f"**Impact on learning:** {impact_text[0].upper() + impact_text[1:]}")
 
         # Chart
         fig2 = px.bar(
