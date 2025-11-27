@@ -192,7 +192,7 @@ with tabs[1]:
         submitted = st.form_submit_button("Analyze my environment")
 
     if submitted:
-        # Map answers to scores 1–5
+        # --------- scoring helpers --------- #
         def map_scaffolding(a):
             if "never" in a:
                 return 1
@@ -256,6 +256,9 @@ with tabs[1]:
                 return "moderate"
             return "high"
 
+        def capitalize_first(s: str) -> str:
+            return s[0].upper() + s[1:] if s else s
+
         env_display_name = env_name.strip() if env_name.strip() else "This environment"
 
         df_custom = pd.DataFrame(
@@ -273,7 +276,7 @@ with tabs[1]:
         collab = custom_scores["Collaboration"]
         meta = custom_scores["Metacognitive support"]
 
-        # Summary line – ABOVE the chart
+        # -------- Summary line ABOVE chart -------- #
         summary_line = (
             f"**Summary:** {env_display_name} appears mostly **{icap_label(icap)}** "
             f"with **{level_label(scaff)} scaffolding** and "
@@ -332,9 +335,13 @@ with tabs[1]:
 
         impact_text = " ".join(impact_parts)
 
-        st.markdown(f"**Impact on learning:** {impact_text[0].upper() + impact_text[1:]}")
+        st.markdown(
+            f"**Impact on learning:** {capitalize_first(impact_text)}"
+        )
 
-        # Chart
+        st.markdown("---")
+
+        # -------- Chart -------- #
         fig2 = px.bar(
             df_custom,
             x="Design principle",
@@ -347,65 +354,100 @@ with tabs[1]:
         fig2.update_layout(showlegend=False)
         st.plotly_chart(fig2, use_container_width=True)
 
+        # -------- Interpretation -------- #
         st.subheader("Interpretation")
+        st.markdown("### Design principle details")
 
-        # ICAP explanation text
+        # ICAP explanation text for reuse
         if icap <= 1:
             icap_text = (
-                "- Engagement is mostly **Passive** (ICAP: P). "
+                "Engagement is mostly **Passive** (ICAP: P). "
                 "Learners receive information but don’t manipulate or generate ideas."
             )
         elif icap == 2:
             icap_text = (
-                "- Engagement is mostly **Active** (ICAP: A). "
+                "Engagement is mostly **Active** (ICAP: A). "
                 "Learners do tasks, but rarely generate new ideas."
             )
         elif icap == 4:
             icap_text = (
-                "- Engagement is mostly **Constructive** (ICAP: C). "
+                "Engagement is mostly **Constructive** (ICAP: C). "
                 "Learners explain, justify, or create, which supports deeper learning."
             )
         else:
             icap_text = (
-                "- Engagement is mostly **Interactive** (ICAP: I). "
+                "Engagement is mostly **Interactive** (ICAP: I). "
                 "Learners co-construct ideas through dialogue and collaboration."
             )
 
-        interpretation_text = f"""
-        **Design principle details**
+        # Scaffolding
+        st.markdown(
+            f"**Scaffolding**  \n"
+            f"- Score: {scaff}/5 ({level_label(scaff).capitalize()})  \n"
+            f"{'• Low scaffolding. Consider adding more adaptive teacher or peer support.' if scaff <= 2 else ''}"
+            f"{'• Moderate scaffolding. You might make support more clearly contingent and plan for fading over time.' if scaff == 3 else ''}"
+            f"{'• Strong scaffolding. Support seems adaptive; consider planning how it fades to build independence.' if scaff >= 4 else ''}"
+        )
 
-        **Scaffolding:**  
-        - Score: {scaff}/5 ({level_label(scaff).capitalize()})  
-        {"• Low scaffolding. Consider adding more adaptive teacher or peer support." if scaff <= 2 else ""}
-        {"• Moderate scaffolding. You might make support more clearly contingent and plan for fading over time." if scaff == 3 else ""}
-        {"• Strong scaffolding. Support seems adaptive; consider planning how it fades to build independence." if scaff >= 4 else ""}
+        st.markdown("")
 
-        **ICAP Engagement:**  
-        - Score: {icap}/5 ({icap_label(icap)})  
-        {icap_text}
+        # ICAP
+        st.markdown(
+            f"**ICAP engagement**  \n"
+            f"- Score: {icap}/5 ({icap_label(icap)})  \n"
+            f"• {icap_text}"
+        )
 
-        **Feedback quality:**  
-        - Score: {feed}/5 ({level_label(feed).capitalize()})  
-        {"• Feedback is mostly evaluative. Adding explanations linked to misconceptions could deepen learning." if feed <= 2 else ""}
-        {"• Feedback is somewhat explanatory. You could align it more closely with specific errors or strategies." if feed == 3 else ""}
-        {"• Feedback appears highly diagnostic and explanatory, which is ideal for learning." if feed >= 4 else ""}
+        st.markdown("")
 
-        **Collaboration:**  
-        - Score: {collab}/5 ({level_label(collab).capitalize()})  
-        {"• Mostly individual. Consider adding structured pair or group activities." if collab <= 2 else ""}
-        {"• Some collaboration. You might add roles, shared artifacts, or norms to deepen it." if collab == 3 else ""}
-        {"• Collaboration seems well integrated. Check that it supports real co-construction, not just dividing work." if collab >= 4 else ""}
+        # Feedback
+        st.markdown(
+            f"**Feedback quality**  \n"
+            f"- Score: {feed}/5 ({level_label(feed).capitalize()})  \n"
+            f"{'• Feedback is mostly evaluative. Adding explanations linked to misconceptions could deepen learning.' if feed <= 2 else ''}"
+            f"{'• Feedback is somewhat explanatory. You could align it more closely with specific errors or strategies.' if feed == 3 else ''}"
+            f"{'• Feedback appears highly diagnostic and explanatory, which is ideal for learning.' if feed >= 4 else ''}"
+        )
 
-        **Metacognitive support:**  
-        - Score: {meta}/5 ({level_label(meta).capitalize()})  
-        {"• Little or no metacognition. You could add prompts to plan, monitor, or reflect on learning." if meta <= 2 else ""}
-        {"• Some reflection. Making it more regular and tied to strategies could help." if meta == 3 else ""}
-        {"• Strong metacognitive support. Learners are regularly guided to reflect and self-regulate." if meta >= 4 else ""}
-        """
+        st.markdown("")
 
-        st.markdown(interpretation_text)
+        # Collaboration
+        st.markdown(
+            f"**Collaboration**  \n"
+            f"- Score: {collab}/5 ({level_label(collab).capitalize()})  \n"
+            f"{'• Mostly individual. Consider adding structured pair or group activities.' if collab <= 2 else ''}"
+            f"{'• Some collaboration. You might add roles, shared artifacts, or norms to deepen it.' if collab == 3 else ''}"
+            f"{'• Collaboration seems well integrated. Check that it supports real co-construction, not just dividing work.' if collab >= 4 else ''}"
+        )
 
-        # ---- DESIGN IMPROVEMENT SUMMARY ---- #
+        st.markdown("")
+
+        # Metacognition
+        st.markdown(
+            f"**Metacognitive support**  \n"
+            f"- Score: {meta}/5 ({level_label(meta).capitalize()})  \n"
+            f"{'• Little or no metacognition. You could add prompts to plan, monitor, or reflect on learning.' if meta <= 2 else ''}"
+            f"{'• Some reflection. Making it more regular and tied to strategies could help.' if meta == 3 else ''}"
+            f"{'• Strong metacognitive support. Learners are regularly guided to reflect and self-regulate.' if meta >= 4 else ''}"
+        )
+
+        # For download text, reconstruct a compact interpretation string
+        interpretation_text = (
+            "Scaffolding:\n"
+            f"- Score: {scaff}/5 ({level_label(scaff)})\n"
+            "ICAP engagement:\n"
+            f"- Score: {icap}/5 ({icap_label(icap)})\n"
+            f"- {icap_text}\n"
+            "Feedback quality:\n"
+            f"- Score: {feed}/5 ({level_label(feed)})\n"
+            "Collaboration:\n"
+            f"- Score: {collab}/5 ({level_label(collab)})\n"
+            "Metacognitive support:\n"
+            f"- Score: {meta}/5 ({level_label(meta)})\n"
+        )
+
+        # -------- Design improvement summary -------- #
+        st.markdown("---")
         st.subheader("Design improvement summary")
 
         improvements = []
@@ -440,7 +482,9 @@ with tabs[1]:
         improvement_paragraph = " ".join(improvements)
         st.write(improvement_paragraph)
 
-        # ---- DOWNLOAD BUTTON ---- #
+        # -------- Download button -------- #
+        impact_for_download = capitalize_first(impact_text)
+
         download_text = (
             f"Learning Environment Analysis – {env_display_name}\n\n"
             f"Scaffolding: {scaff}/5 ({level_label(scaff)})\n"
@@ -449,7 +493,7 @@ with tabs[1]:
             f"Collaboration: {collab}/5 ({level_label(collab)})\n"
             f"Metacognitive support: {meta}/5 ({level_label(meta)})\n\n"
             f"Summary:\n{summary_line}\n\n"
-            f"Impact on learning:\n{impact_text}\n\n"
+            f"Impact on learning:\n{impact_for_download}\n\n"
             "Interpretation:\n"
             f"{interpretation_text}\n\n"
             "Design improvement summary:\n"
@@ -468,3 +512,18 @@ st.caption(
     "This tool is inspired by Learning Sciences frameworks: Tabak & Reiser (scaffolding), "
     "Chi (ICAP), Winne & Azevedo (metacognition), and Tang et al. (2025) on GenAI-assisted teaching."
 )
+
+with st.expander("References (APA)"):
+    st.markdown(
+        """
+Chi, M. T. H. (2018). ICAP: How students engage to learn. *Proceedings of the Annual Meeting of the Cognitive Science Society, 40*.
+
+Chi, M. T. H., & Wylie, R. (2014). The ICAP framework: Linking cognitive engagement to active learning outcomes. *Educational Psychologist, 49*(4), 219–243. https://doi.org/10.1080/00461520.2014.965823
+
+Tabak, I., & Reiser, B. J. (2022). Scaffolding. In R. K. Sawyer (Ed.), *The Cambridge Handbook of the Learning Sciences* (3rd ed., pp. 53–71). Cambridge University Press. https://doi.org/10.1017/9781108888295.005
+
+Tang, Q., Deng, W., Huang, Y., Wang, S., & Zhang, H. (2025). Can generative artificial intelligence be a good teaching assistant?—An empirical analysis based on generative AI-assisted teaching. *Journal of Computer Assisted Learning, 41*(3), e70027. https://doi.org/10.1111/jcal.70027
+
+Winne, P. H., & Azevedo, R. (2022). Metacognition and self-regulated learning. In R. K. Sawyer (Ed.), *The Cambridge Handbook of the Learning Sciences* (3rd ed., pp. 93–113). Cambridge University Press. https://doi.org/10.1017/9781108888295.007
+        """
+    )
